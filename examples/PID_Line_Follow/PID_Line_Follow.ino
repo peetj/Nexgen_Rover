@@ -4,7 +4,7 @@
  Author:	Peter Januarius
 */
 
-#include <Nexgen_Rover_v4.h>
+#include <Nexgen_Rover.h>
 #include <QTRSensors.h>
 
 #define SETPOINT    1000    // The goal for readLineBlack (center)
