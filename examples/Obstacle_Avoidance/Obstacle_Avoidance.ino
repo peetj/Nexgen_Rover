@@ -5,7 +5,7 @@
 */
 
 #include <Ultrasonic.h>
-#include <Nexgen_Rover_v4.h>
+#include <Nexgen_Rover.h>
 #include "pitches.h"
 
 #define DISTANCE_TO_STOP_AT 40
