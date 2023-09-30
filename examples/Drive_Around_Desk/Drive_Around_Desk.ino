@@ -5,7 +5,7 @@
 */
 
 // the setup function runs once when you press reset or power the board
-#include <Nexgen_Rover_v4.h>
+#include <Nexgen_Rover.h>
 
 #define DEFAULT_SPEED 150
 
