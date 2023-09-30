@@ -4,7 +4,7 @@
  Author:	Peter Januarius
 */
 
-#include <Nexgen_Rover_v4.h>
+#include <Nexgen_Rover.h>
 #include <QTRSensors.h>
 
 #define DEFAULT_SPEED_LEFT 160
