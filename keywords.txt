@@ -1,0 +1,37 @@
+#######################################
+# Syntax Coloring Map For Nexgen Rover 
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+NXG_Rover	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+init				KEYWORD2
+getRandomNumber		KEYWORD2
+getPi				KEYWORD2
+forward				KEYWORD2
+backward			KEYWORD2
+setSpeed			KEYWORD2
+setSpeedLeft		KEYWORD2
+setSpeedRight		KEYWORD2
+setDirection		KEYWORD2
+turnLeft			KEYWORD2
+turnRight			KEYWORD2
+veerLeft			KEYWORD2
+veerRight			KEYWORD2
+stop				KEYWORD2
+playMelody			KEYWORD2
+playTone			KEYWORD2
+initLineSensors		KEYWORD2
+calibrate			KEYWORD2
+sensorLog			KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
