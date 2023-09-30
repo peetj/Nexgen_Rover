@@ -5,7 +5,7 @@
 */
 
 // the setup function runs once when you press reset or power the board
-#include <Nexgen_Rover_v4.h>
+#include <Nexgen_Rover.h>
 
 NXG_Rover nxg = NXG_Rover(&Serial, true);
 int num_times_to_repeat = 1;
