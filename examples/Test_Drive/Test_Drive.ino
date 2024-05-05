@@ -1,36 +1,39 @@
-/*
- Name:		Test_Drive.ino
- Created:	9/24/2023 3:37:16 PM
- Author:	Peter Januarius
-*/
-
-// the setup function runs once when you press reset or power the board
 #include <Nexgen_Rover.h>
 
-NXG_Rover nxg = NXG_Rover(&Serial, true);
+NXG_Rover rover = NXG_Rover(&Serial, false);
 int num_times_to_repeat = 1;
 
 void setup() {
-	
-	Serial.begin(9600);
-	nxg.init(false);
-
-	// Delay start for 2 seconds
-	delay(2000);
+	rover.init(true);
 }
 
-// the loop function runs over and over again until power down or reset
+// The loop function runs over and over again until power down or reset
 void loop() {
-    if (num_times_to_repeat < 2) {             // When num_times_to_repeat reaches 2, the code inside the 'if' won't run
+  if (num_times_to_repeat > 1) return;  // This line ensures that the code below will ONLY run ONCE
 
-        nxg.forward(150, 150);
-        delay(1000);
-        nxg.setSpeed(150, 0);
-        delay(1500);
-        nxg.setSpeed(200, 200);
-        delay(500);
-        nxg.stop();
+  rover.forward(80, 80, 1);
 
-        num_times_to_repeat++;                  // Add 1 to num_times_to_repeat
-    }
+  num_times_to_repeat++;
 }
+
+
+  /*************************************************************************************
+    CODE EXPLANATION
+    ----------------
+
+    "rover" is the representation of the actual rover robot (represented in code).
+    "rover.forward" tells the rover to move forward
+
+    What are the 3 numbers inside the brackets?  (80, 80, 1)
+
+    (LeftMotorSpeed, RightMotorSpeed, TimeInSeconds)
+
+    So....
+
+    LeftMotorSpeed = 80
+    RightMotorSpeed = 80
+    TimeInSeconds = 1
+
+    Putting all this into English....., 
+    The Rover travels forward for 1 second at 80% speed on both motors and then stops
+  **************************************************************************************/

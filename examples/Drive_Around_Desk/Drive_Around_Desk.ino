@@ -1,41 +1,39 @@
-/*
- Name:		Rover_Examples_Drive_Around_Desk.ino
- Created:	9/25/2023 5:20:52 PM
- Author:	Peter Januarius
-*/
-
-// the setup function runs once when you press reset or power the board
 #include <Nexgen_Rover.h>
 
-#define DEFAULT_SPEED 150
+NXG_Rover rover = NXG_Rover(&Serial, true);
 
-NXG_Rover nxg = NXG_Rover(&Serial, true);
-boolean hasStopped = false;     
+bool hasStopped = false;
 
 void setup() {
+    rover.setBatteryType(NXG_Rover::ALKALINE_9V);
+    rover.setVoltageReference(NXG_Rover::VREF_ARDUINO_NANO_V3);
+    
+    rover.init(false);
+    
+    /*** IF YOU WANT TO PLAY YOUR STARTUP SOUND, COPY IT FROM YOUR PREVIOUS SKETCH/CODE ***/
 
-    Serial.begin(9600);
-    nxg.init(true);
-
-    // Delay start for 2 seconds
     delay(2000);
 }
 
 // The loop function runs over and over again until power down or reset
 void loop() {
-    if (hasStopped == true) return;
-    /*** YOUR CODE STARTS HERE ***/
+  if (hasStopped) return;   // EXIT if the rover has travelled around the desk
 
-    nxg.forward(DEFAULT_SPEED, DEFAULT_SPEED);    // Moves forward for 1 second and stops
-    delay(1000);
-    nxg.stop();
-    delay(500);                                   // We wait half a second for the wheels to grind to a halt
+    // FORWARD
+    rover.forward(90, 90, 1); 
+    
+    // TURN RIGHT
+    rover.turnRight(80, 80, 0.5);
+    
+    // FORWARD
+    
+    // TURN RIGHT
+    
+    // FORWARD
+    
+    // TURN RIGHT
+    
+    // FORWARD
 
-    nxg.forward(DEFAULT_SPEED, 0);                // Turns right (you will most probably have to modify this) for 1 second and stops
-    delay(1000);
-    nxg.stop();
-    delay(500);                                   // We wait half a second for the wheels to grind to a halt
-
-    /*** YOUR CODE ENDS HERE ***/
     hasStopped = true;
 }

@@ -1,39 +1,49 @@
-/*
- Name:		Rover_Examples_Touch_Sensor.ino
- Created:	9/25/2023 3:19:25 PM
- Author:	Peter Januarius
-*/
-
-// the setup function runs once when you press reset or power the board
 #include <Nexgen_Rover.h>
 
-NXG_Rover nxg = NXG_Rover(&Serial, true);
+NXG_Rover rover = NXG_Rover(&Serial, true);
 int num_times_to_repeat = 1;
 
 void setup() {
-
-    Serial.begin(9600);
-    nxg.init(true);
-
-    // Delay start for 2 seconds
-    delay(2000);
+    rover.init(true);
 }
 
 // The loop function runs over and over again until power down or reset
 void loop() {
-    if (num_times_to_repeat < 2) {             // When num_times_to_repeat reaches 2, the code inside the 'if' won't run
-        
-        // Read touch sensor
-        int isTouched = digitalRead(nxg.touchSensorPin);
-        if (isTouched == 1) {
-            nxg.forward(150, 150);
-            delay(1000);
-            nxg.setSpeed(150, 0);
-            delay(1500);
-            nxg.setSpeed(200, 200);
-            delay(500);
-            nxg.stop();
-            num_times_to_repeat++;                  // Add 1 to num_times_to_repeat
-        }
+    if (num_times_to_repeat > 1) return;                  // When num_times_to_repeat reaches 2, immediately exit loop()
+       
+    int isTouched = digitalRead(rover.getTouchSensor());  // Read touch sensor. If touched, its value will be 1
+
+    if (isTouched == 1) {                                 // When touched, drive forward, turn right and drive forward again
+      rover.forward(90, 90, 1);
+      rover.turnRight(90, 90, 1);
+      rover.forward(90, 90, 1);
+      
+      num_times_to_repeat++;                              // Add 1 to num_times_to_repeat
     }
 }
+
+
+  /*************************************************************************************
+    CODE EXPLANATION
+    ----------------
+
+    "rover" is the representation of the actual rover robot (represented in code).
+    "rover.forward" tells the rover to move forward
+    "rover.turnRight" tells the rover to turn right
+
+    What are the 3 numbers inside the brackets?  (80, 80, 1)
+
+    (LeftMotorSpeed, RightMotorSpeed, TimeInSeconds)
+
+    So....
+
+    LeftMotorSpeed = 90
+    RightMotorSpeed = 90
+    TimeInSeconds = 1
+
+    Putting all this into English....., 
+    The Rover travels forward for 1 second at 90% speed on both motors
+    The Rover then turns right for 1 second at 90% speed on both motors
+    The Rover finally travels forward for 1 second again at 90% speed on both motors
+
+  **************************************************************************************/
