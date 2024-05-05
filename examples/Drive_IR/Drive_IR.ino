@@ -21,10 +21,10 @@ void loop() {
     if(IrReceiver.decode()){
       IrReceiver.resume();
       if (IrReceiver.decodedIRData.command == LEFT_BUTTON) {        
-        rover.forward(100, 100, 1);
+        rover.turnLeft(100, 100, 0.1);
       } 
       else if (IrReceiver.decodedIRData.command == MIDDLE_BUTTON) {
-        rover.turnLeft(100, 100, 0.1);
+        rover.forward(100, 100, 1);
       } 
       else if (IrReceiver.decodedIRData.command == RIGHT_BUTTON) {
         rover.turnRight(100, 100, 0.1);
