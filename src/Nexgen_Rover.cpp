@@ -523,7 +523,7 @@ long NXG_Rover::scanForward() {
 }
 
 long NXG_Rover::scanLeft() {
-	servo.write(180);
+	servo.write(165);
 	delay(2000);
 	long distance = getDistance();
 	if (_serial) _serial->print("Distance left: ");
@@ -533,7 +533,7 @@ long NXG_Rover::scanLeft() {
 }
 
 long NXG_Rover::scanRight() {
-	servo.write(0);
+	servo.write(15);
 	delay(2000);
 	long distance = getDistance();
 	if (_serial) _serial->print("Distance right: ");
