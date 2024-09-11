@@ -55,7 +55,7 @@ public:
     /* Setup methods */
     void setBatteryType(int type);
     void setVoltageReference(float vRef);
-    static float getBatteryVoltage();
+    static float getBatteryVoltage(int batteryType);
 
     /* Bluetooth Methods */
     SoftwareSerial& getBluetooth();
@@ -74,6 +74,7 @@ public:
     void setSpeed(int sp_left, int sp_right);
     void setSpeedLeft(int sp_left);
     void setSpeedRight(int sp_right);
+    void setSpeedBoth(int sp_left, int sp_right);
     void setDirection(int dLeft, int dRight);
     void turnLeft();
     void turnRight();
@@ -87,8 +88,9 @@ public:
     void veerRight(int sp_left, int sp_right);
     void stop();
 
-    /* LED Bar methods */
+    /* Battery methods */
     void setBatteryIndicator(float voltage);
+    void turnOffBatteryCheck(bool turnOff);
 
     /* LED Methods */
     void ledsOn(const CRGB& color, uint8_t leftOn=1, uint8_t rightOn=1);
@@ -169,7 +171,7 @@ private:
     #define RX 11
     #define TX 13
     #define NUMBER_LINE_SENSORS 3
-    #define MAX_SPEED 255
+    #define MAX_SPEED 100
     #define MAX_INPUT 10
     #define BATTERY_PIN A0
     #define LEDBAR_CLOCK_PIN A4
@@ -206,6 +208,7 @@ private:
     bool _blink_on = false;
     bool _leds_state_on = false;
     bool _servoInUse = false;
+    bool _turnOffBatteryCheck = false;
 };
 
 

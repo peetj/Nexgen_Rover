@@ -15,21 +15,14 @@ void loop() {
 }
 
 void playCustomStartupSound() {
-		rover.playTone(NOTE_C4, 0.5);	// NOTE_C4 is Middle-C on the Piano
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_D4, 0.5);
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_E4, 0.5);
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_F4, 0.5);
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_G4, 0.5);
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_A4, 0.5);
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_B4, 0.5);
-    rover.playTone(REST, 0.5);
-    rover.playTone(NOTE_C5, 0.5);
+		rover.playTone(NOTE_C4, 0.25);	// NOTE_C4 is Middle-C on the Piano
+    rover.playTone(NOTE_D4, 0.25);
+    rover.playTone(NOTE_E4, 0.25);
+    rover.playTone(NOTE_F4, 0.25);
+    rover.playTone(NOTE_G4, 0.25);
+    rover.playTone(NOTE_A4, 0.25);
+    rover.playTone(NOTE_B4, 0.25);
+    rover.playTone(NOTE_C5, 0.25);
 }
 
 

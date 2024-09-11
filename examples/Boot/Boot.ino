@@ -6,7 +6,6 @@ void setup() {
 
     rover.setBatteryType(NXG_Rover::ALKALINE_9V);
     rover.setVoltageReference(NXG_Rover::VREF_ARDUINO_NANO_V3);
-    rover.setServo(90);
     rover.init(true);
 }
 

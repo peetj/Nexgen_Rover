@@ -17,7 +17,7 @@ Servo servo;
 Ultrasonic ultrasonic(ULTRASONIC_PIN);
 
 // Initialize static constants
-const float NXG_Rover::VREF_ARDUINO_NANO_V3 = 3.9;//4.68 when USB is plugged in;
+const float NXG_Rover::VREF_ARDUINO_NANO_V3 = 5.1;//4.68 when USB is plugged in;
 const float NXG_Rover::VREF_ARDUINO_NANO_33 = 3.3;
 
 ISR(TIMER1_COMPB_vect) {
@@ -54,7 +54,7 @@ void NXG_Rover::init(boolean playSound) {
 		playStartupSound();
 	}
 
-	if (!_servoInUse) {
+	if (!_servoInUse && !_turnOffBatteryCheck) {
 		setupBatteryCheckTimer();
 		_bar.begin();
 	}
@@ -164,7 +164,17 @@ void NXG_Rover::accelerate(int to_speed) {
 		delay(10);
 	}
 }
-
+/**
+ * @brief Sets the speed of the left motor.
+ *
+ * This function controls the speed of the left motor.
+ * The speed can be adjusted between -255 (full reverse) and 255 (full forward).
+ *
+ * @param speedL The speed of the left motor. Accepts values from -255 to 255.
+ *               -255: full reverse
+ *               0: stop
+ *               255: full forward
+ */
 void NXG_Rover::forward(int speedL, int speedR, float s) {
 	//if (_serial) _serial->println("forward...");
 	
@@ -246,13 +256,15 @@ void NXG_Rover::setSpeed(int sp_left, int sp_right) {
 	int mapped_speedL = min(sanitiseSpeed(sp_left), MAX_SPEED);
 	int mapped_speedR = min(sanitiseSpeed(sp_right), MAX_SPEED);
 
-	setSpeedLeft(mapped_speedL);
-	setSpeedRight(mapped_speedR);
+	//setSpeedLeft(mapped_speedL);
+	//setSpeedRight(mapped_speedR);
+	setSpeedBoth(mapped_speedL, mapped_speedR);
 }
 
 void NXG_Rover::setSpeedLeft(int mapped_speedL) {
 	//if (_serial) _serial->print("setting speedLeft...");
 	//if (_serial) _serial->println(mapped_speedL);
+
 	analogWrite(MOTOR_LEFT_PIN, mapped_speedL);
 	currentSpeedLeft = mapped_speedL;
 }
@@ -260,8 +272,21 @@ void NXG_Rover::setSpeedLeft(int mapped_speedL) {
 void NXG_Rover::setSpeedRight(int mapped_speedR) {
 	//if (_serial) _serial->print("setting speedRight....");
 	//if (_serial) _serial->println(mapped_speedR);
+
 	analogWrite(MOTOR_RIGHT_PIN, mapped_speedR);
 	currentSpeedRight = mapped_speedR;
+}
+
+void NXG_Rover::setSpeedBoth(int sp_left, int sp_right) {
+	_serial->print("setting setSpeedBoth....");
+	for (int i = 0; i < sp_left; i+=2) {
+		analogWrite(MOTOR_LEFT_PIN, i);
+		analogWrite(MOTOR_RIGHT_PIN, i);
+		delay(1);
+	}
+
+	currentSpeedRight = sp_right;
+	currentSpeedLeft = sp_left;
 }
 
 void NXG_Rover::setDirection(int dLeft, int dRight) {
@@ -316,7 +341,6 @@ void NXG_Rover::turnRight(int sp_left, int sp_right) {
 	//if (_serial) _serial->println("turning right...");
 	setDirection(HIGH, LOW);
 	
-	// Right motor much slower than right
 	setSpeed(sp_left, sp_right);
 	setLEDColor(CRGB::Blue, 0, 1);
 }
@@ -325,7 +349,6 @@ void NXG_Rover::turnLeft(int sp_left, int sp_right, float s) {
 	//if (_serial) _serial->println("turning left...");
 	setDirection(LOW, HIGH);
 
-	// Left motor much slower than right
 	setSpeed(sp_left, sp_right);
 	setLEDColor(CRGB::Blue, 1, 0);
 
@@ -368,9 +391,14 @@ void NXG_Rover::veerRight(int sp_left, int sp_right) {
 }
 
 void NXG_Rover::stop() {
-	delay(5);
+	
+	for (int i = currentSpeedRight; i > 0; i--) {
+		setSpeed(i);
+		delay(1);
+	}
+	// Make sure we are stopped
 	setSpeed(0);
-	ledsOn(CRGB::Black);
+	//	ledsOn(CRGB::Black);
 }
 
 /* LED Bar Methods */
@@ -385,6 +413,12 @@ void NXG_Rover::setBatteryIndicator(float voltage) {
 	}
 }
 
+void NXG_Rover::turnOffBatteryCheck(bool turnOff) {
+	if (turnOff) {
+		_turnOffBatteryCheck = true;
+	}
+}
+
 /* LED Methods */
 void NXG_Rover::ledsOn(const CRGB& color, uint8_t leftOn=1, uint8_t rightOn=1) {
 	if(leftOn) _leds[0] = color;
@@ -396,6 +430,7 @@ void NXG_Rover::ledsOn(const CRGB& color, uint8_t leftOn=1, uint8_t rightOn=1) {
 void NXG_Rover::ledsOff() {
 	_leds[0] = CRGB::Black;
 	_leds[1] = CRGB::Black;
+	bool _leds_state_on = false;
 	FastLED.show();
 	_leds_state_on = false;
 }
@@ -629,7 +664,7 @@ float NXG_Rover::getMinVoltage() {
 }
 
 void NXG_Rover::setupBatteryCheckTimer() {
-	//_serial->println("Setting up battery check timer...");
+	_serial->println("Setting up battery check timer...");
 	// Clear Timer on Compare Match (CTC) mode for Timer1
 	TCCR1A = 0;
 	TCCR1B = 0;
@@ -646,9 +681,11 @@ void NXG_Rover::setupBatteryCheckTimer() {
 	sei();
 }
 
-static float NXG_Rover::getBatteryVoltage() {
+static float NXG_Rover::getBatteryVoltage(int batteryType) {
 	//if (_serial) {_serial->println("getBatteryVoltage()...");}
 	float analog_proportional_resolution_reading = analogRead(BATTERY_PIN);
+	Serial.println(analog_proportional_resolution_reading);
+	Serial.println("********************");
 
 	/* We divide the reference voltage into 1024 equal parts and then multiply
 	it by the number taken from analog_proportional_voltage_reading, giving
@@ -657,9 +694,16 @@ static float NXG_Rover::getBatteryVoltage() {
 
 	/* We then get the total voltage of the battery by the following equation. This is a
 	rearrangement of Vin x Rdown/Rup+RDown - the proportion across Rdown */
-	float totalBatteryVoltage = proportionalVoltage * (RESISTOR_UP / RESISTOR_DOWN + 1);
+	float totalBatteryVoltage = proportionalVoltage * ((RESISTOR_UP / RESISTOR_DOWN) + 1);
 
-	return totalBatteryVoltage;
+	/*	Using a 2S LiPo we need a calibration factor because the values we are getting are different to the actual measured values
+		VREF = 5.1v
+		A0 = 2.045v but the analogRead gives us 475 (which is the difference)
+		Thus we will introduce a calibration factor for the LiPo only
+	*/
+	float calibrationFactor = batteryType == 1 ? 0.875 : 1;
+	
+	return totalBatteryVoltage * calibrationFactor;
 }
 
 void NXG_Rover::handleBatteryMonitoring() {
@@ -671,7 +715,7 @@ void NXG_Rover::timerCallback() {
 	// This method is called by the timer interrupt
 	// Here, perform the battery check and update any indicators or alarms
 	if (rover) {
-		float battery_voltage = rover->getBatteryVoltage();  // Assume getBatteryVoltage() is a method that fetches the current battery voltage
+		float battery_voltage = rover->getBatteryVoltage(rover->_batteryType);  // Assume getBatteryVoltage() is a method that fetches the current battery voltage
 
 		if (battery_voltage < rover->getMinVoltage()) {
 			rover->playLowBatteryWarning(NOTE_G5);

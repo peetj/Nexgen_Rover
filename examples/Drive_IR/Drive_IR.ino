@@ -4,6 +4,7 @@
 #define MIDDLE_BUTTON 0x00
 #define RIGHT_BUTTON 0x00
 
+#include "PinDefinitionsAndMore.h"
 #include <IRremote.hpp> // include the library
 #include <Nexgen_Rover.h>
 
