@@ -66,10 +66,12 @@ public:
 
     /* Drive methods */
     void accelerate(int to_speed = 255);
-    void forward(int speedL, int speedR, float s=0);
-    void forward(int speed);
-    void backward(int speedL, int speedR, float s=0);
-    void backward(int speed);
+    void forward(int speedL, int speedR, float s=0, bool isDanceMode=false);
+    void forward(int duration, bool isDanceMode=false);
+    void forward(float duration, bool isDanceMode = false);
+    void backward(int speedL, int speedR, float s=0, bool isDanceMode = false);
+    void backward(int duration, bool isDanceMode=false);
+    void backward(float duration, bool isDanceMode = false);
     void setSpeed(int sp);
     void setSpeed(int sp_left, int sp_right);
     void setSpeedLeft(int sp_left);
@@ -77,25 +79,33 @@ public:
     void setSpeedBoth(int sp_left, int sp_right);
     void setDirection(int dLeft, int dRight);
     void turnLeft();
-    void turnRight();
     void turnLeft(int sp);
-    void turnRight(int sp);
     void turnLeft(int sp_left, int sp_right);
+    void turnLeft(int sp_left, int sp_right, float s, bool isDanceMode = false);
+    void turnLeft(int duration, bool isDanceMode = false, float scalingFactor=1);
+    void turnLeft(float duration, bool isDanceMode = false, float scalingFactor = 1);
+    void turnRight();
+    void turnRight(int sp);
     void turnRight(int sp_left, int sp_right);
-    void turnLeft(int sp_left, int sp_right, float s);
-    void turnRight(int sp_left, int sp_right, float s);
+    void turnRight(int sp_left, int sp_right, float s, bool isDanceMode = false);
+    void turnRight(int duration, bool isDanceMode = false, float scalingFactor = 1);
+    void turnRight(float duration, bool isDanceMode = false, float scalingFactor = 1);
     void veerLeft(int sp_left, int sp_right);
     void veerRight(int sp_left, int sp_right);
     void stop();
+    void delayFor(float s = 0, bool isDanceMode = false);
 
     /* Battery methods */
     void setBatteryIndicator(float voltage);
     void turnOffBatteryCheck(bool turnOff);
+    void setLEDIndicator(int level);
 
     /* LED Methods */
     void ledsOn(const CRGB& color, uint8_t leftOn=1, uint8_t rightOn=1);
     void ledsOff();
     void ledsWarning();
+    void flashLED_2(int toneFreq, float scalingFactor = 1);
+    void flashLED_3(int toneFreq, float scalingFactor = 1);
 
     /* Buzzer methods */
     void playTone(int freq);
@@ -123,6 +133,19 @@ public:
     void initLineSensors();
     void calibrate();
     void sensorLog(uint16_t sensors[], boolean isOnLine, boolean isLeftOfLine, boolean isRightOfLine, int position, boolean doLog);
+
+    /* Dance Methods */
+    int getBPM();
+    void setBPM(int bpm);
+    void NXG_Rover::metronome(int numBeats);
+    void lookLeft(float duration=0);
+    void lookRight(float duration=0);
+    void lookCenter(float duration=0);
+    void theLook(int numLooks, float duration=0, float scalingFactor=1);
+    void shuffleForward(int numberOfTimes, float scalingFactor = 1);
+    void shuffleBackward(int numberOfTimes, float scalingFactor = 1);
+    void head180(int numberOfTimes, float scalingFactor = 1);
+    void NXG_Rover::sideToSide(int numberOfTimes, float scalingFactor);
 
     /* Utility Methods */
     void printMultiple(const char* first, ...);
@@ -171,7 +194,8 @@ private:
     #define RX 11
     #define TX 13
     #define NUMBER_LINE_SENSORS 3
-    #define MAX_SPEED 100
+    #define MAX_SPEED 255
+    #define BRAKING_RATE 10
     #define MAX_INPUT 10
     #define BATTERY_PIN A0
     #define LEDBAR_CLOCK_PIN A4
@@ -189,6 +213,7 @@ private:
     #define DATA_PIN 12
     #define INITIAL_DELAY_IN_MICROSECONDS 1000
     #define BAUD_RATE 9600
+    #define BPM_SCALING_FACTOR 1.15
     
     bool _debug = true;    
     bool _isRoverEnabled = false;
@@ -209,6 +234,8 @@ private:
     bool _leds_state_on = false;
     bool _servoInUse = false;
     bool _turnOffBatteryCheck = false;
+    int _bpm = 0;
+    int _ms_per_beat = 0;
 };
 
 

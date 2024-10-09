@@ -2,3 +2,13 @@
 *.filters
 *.user
 *.sln
+*.vsidx
+*.sqlite
+VSWorkspaceState.*
+*.lock
+ProjectSettings.json
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+*.wsuo

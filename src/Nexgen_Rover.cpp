@@ -13,7 +13,7 @@
 // Initialize the static member
 NXG_Rover* NXG_Rover::rover = nullptr;
 
-Servo servo;
+Servo servo
 Ultrasonic ultrasonic(ULTRASONIC_PIN);
 
 // Initialize static constants
@@ -45,6 +45,9 @@ void NXG_Rover::init(boolean playSound) {
 	pinMode(MOTOR_RIGHT_PIN, OUTPUT);
 	pinMode(DIR_LEFT_PIN, OUTPUT);
 	pinMode(DIR_RIGHT_PIN, OUTPUT);
+
+	pinMode(A1, OUTPUT);
+	pinMode(A2, OUTPUT);
 
 	setSpeed(0);
 
@@ -117,6 +120,77 @@ int NXG_Rover::getValue() {
 	return _value;
 }
 
+/** DANCE METHODS **/
+int NXG_Rover::getBPM() {
+	return _bpm;
+}
+
+void NXG_Rover::setBPM(int bpm) {
+	_bpm = bpm * BPM_SCALING_FACTOR;
+	_ms_per_beat = (float(60) / float(_bpm)) * 1000;
+}
+
+void NXG_Rover::lookLeft(float duration) {
+	servo.write(180);
+	delayFor(duration, true);	
+}
+
+void NXG_Rover::lookRight(float duration) {
+	servo.write(0);
+	delayFor(duration, true);	
+}
+
+void NXG_Rover::lookCenter(float duration) {
+	servo.write(90);
+	delayFor(duration, true);
+}
+
+void NXG_Rover::theLook(int numLooks, float duration, float scalingFactor) {
+	int numDegrees = 180 / numLooks;
+	for (int8_t i = 0; i < numLooks; i++) {
+		servo.write(i * numDegrees);
+		delayFor(duration * scalingFactor, true);
+	}
+}
+
+void NXG_Rover::shuffleForward(int numberOfTimes, float scalingFactor) {
+	for (int i = 0; i < numberOfTimes; i++) {
+		forward(0.25f * scalingFactor, true);
+		delayFor(0.75f * scalingFactor, true);
+		forward(0.25f * scalingFactor, true);
+		delayFor(0.75f * scalingFactor, true);
+	}
+}
+
+void NXG_Rover::shuffleBackward(int numberOfTimes, float scalingFactor) {
+	for (int i = 0; i < numberOfTimes; i++) {
+		backward(0.25f * scalingFactor, true);
+		delayFor(0.75f * scalingFactor, true);
+		backward(0.25f * scalingFactor, true);
+		delayFor(0.75f * scalingFactor, true);
+	}
+}
+
+void NXG_Rover::head180(int numberOfTimes, float scalingFactor) {
+	for (int i = 0; i < numberOfTimes; i++) {
+		lookLeft(1 * scalingFactor);
+		lookRight(1 * scalingFactor);
+		lookCenter(1 * scalingFactor);
+		delayFor(1, true);
+	}
+}
+
+void NXG_Rover::sideToSide(int numberOfTimes, float scalingFactor) {
+	for (int i = 0; i < numberOfTimes; i++) {         
+		turnLeft(1, true, scalingFactor);
+		turnRight(1, true, scalingFactor);
+		turnRight(1, true, scalingFactor);
+		turnLeft(1, true, scalingFactor);
+	}
+}
+
+/** END DANCE METHODS **/
+
 void NXG_Rover::processIncomingChar(char incomingChar) {
 	if (incomingChar == CMD_ARMED) {
 		is_ARMED = true;
@@ -170,50 +244,50 @@ void NXG_Rover::accelerate(int to_speed) {
  * This function controls the speed of the left motor.
  * The speed can be adjusted between -255 (full reverse) and 255 (full forward).
  *
- * @param speedL The speed of the left motor. Accepts values from -255 to 255.
- *               -255: full reverse
- *               0: stop
- *               255: full forward
+ * @param speedL The speed of the left motor. Percentage value from 0-100
+ * @param speedR The speed of the right motor. Percentage value from 0-100
+ * @param s The number of seconds to move for
  */
-void NXG_Rover::forward(int speedL, int speedR, float s) {
+void NXG_Rover::forward(int speedL, int speedR, float s, bool isDanceMode) {
 	//if (_serial) _serial->println("forward...");
 	
 	setDirection(HIGH, HIGH);
 	setSpeed(speedL, speedR);
-	ledsOn(CRGB::Green);
+	//ledsOn(CRGB::Green);
+	delayFor(s, isDanceMode);
 
-	if (s > 0) {
-		delay(s * 1000);
+	if(s>0)
 		stop();
-	}
-		
 }
 
-void NXG_Rover::forward(int speed) {
-	//if (_serial) _serial->println("forward...");	
-
-	setDirection(HIGH, HIGH);
-	setSpeed(speed);
+void NXG_Rover::forward(int duration, bool isDanceMode) {
+	forward(float(duration), isDanceMode);
 }
 
-void NXG_Rover::backward(int speedL, int speedR, float s) {
+void NXG_Rover::forward(float duration, bool isDanceMode) {
+	forward(100, 100, duration, isDanceMode);
+}
+
+void NXG_Rover::backward(int speedL, int speedR, float s, bool isDanceMode) {
 	//if (_serial) _serial->println("backward...");
 
 	setDirection(LOW, LOW);
 	setSpeed(speedL, speedR);
-	ledsOn(CRGB::Red);
+	//ledsOn(CRGB::Red);
+	delayFor(s, isDanceMode);
 
-	if (s > 0) {
-		delay(s * 1000);
-		stop();
-	}		
+	if(s>0)
+		stop();	
 }
 
-void NXG_Rover::backward(int speed) {
+void NXG_Rover::backward(int duration, bool isDanceMode) {
 	//if (_serial) _serial->println("backward...");
+	backward(float(duration), isDanceMode);
+}
 
-	setDirection(LOW, LOW);
-	setSpeed(speed);
+void NXG_Rover::backward(float duration, bool isDanceMode) {
+	//if (_serial) _serial->println("backward...");
+	backward(100, 100, duration, isDanceMode);
 }
 
 void NXG_Rover::setSpeed(int sp) {
@@ -279,9 +353,9 @@ void NXG_Rover::setSpeedRight(int mapped_speedR) {
 
 void NXG_Rover::setSpeedBoth(int sp_left, int sp_right) {
 	_serial->print("setting setSpeedBoth....");
-	for (int i = 0; i < sp_left; i+=2) {
-		analogWrite(MOTOR_LEFT_PIN, i);
-		analogWrite(MOTOR_RIGHT_PIN, i);
+	for (int i = 0; i < max(sp_left,sp_right); i+=2) {
+		analogWrite(MOTOR_LEFT_PIN, min(i,sp_left));
+		analogWrite(MOTOR_RIGHT_PIN, min(i,sp_right));
 		delay(1);
 	}
 
@@ -345,20 +419,20 @@ void NXG_Rover::turnRight(int sp_left, int sp_right) {
 	setLEDColor(CRGB::Blue, 0, 1);
 }
 
-void NXG_Rover::turnLeft(int sp_left, int sp_right, float s) {
+void NXG_Rover::turnLeft(int sp_left, int sp_right, float s, bool isDanceMode) {
 	//if (_serial) _serial->println("turning left...");
 	setDirection(LOW, HIGH);
 
 	setSpeed(sp_left, sp_right);
 	setLEDColor(CRGB::Blue, 1, 0);
 
-	if (s > 0) {
-		delay(s * 1000);
+	delayFor(s, isDanceMode);
+
+	if(s>0)
 		stop();
-	}
 }
 
-void NXG_Rover::turnRight(int sp_left, int sp_right, float s) {
+void NXG_Rover::turnRight(int sp_left, int sp_right, float s, bool isDanceMode) {
 	//if (_serial) _serial->println("turning right...");
 	setDirection(HIGH, LOW);
 
@@ -366,10 +440,26 @@ void NXG_Rover::turnRight(int sp_left, int sp_right, float s) {
 	setSpeed(sp_left, sp_right);
 	setLEDColor(CRGB::Blue, 0, 1);
 
-	if (s > 0) {
-		delay(s * 1000);
+	delayFor(s, isDanceMode);
+
+	if(s>0)
 		stop();
-	}
+}
+
+void NXG_Rover::turnLeft(int duration, bool isDanceMode = false, float scalingFactor = 1) {
+	turnLeft(float(duration * scalingFactor), isDanceMode);
+}
+
+void NXG_Rover::turnLeft(float duration, bool isDanceMode = false, float scalingFactor = 1) {
+	turnLeft(50, 50, duration * scalingFactor, isDanceMode);
+}
+
+void NXG_Rover::turnRight(int duration, bool isDanceMode = false, float scalingFactor = 1) {
+	turnRight(float(duration * scalingFactor), isDanceMode);
+}
+
+void NXG_Rover::turnRight(float duration, bool isDanceMode = false, float scalingFactor = 1) {
+	turnRight(50, 50, duration * scalingFactor, isDanceMode);
 }
 
 void NXG_Rover::veerLeft(int sp_left, int sp_right) {
@@ -392,13 +482,15 @@ void NXG_Rover::veerRight(int sp_left, int sp_right) {
 
 void NXG_Rover::stop() {
 	
-	for (int i = currentSpeedRight; i > 0; i--) {
-		setSpeed(i);
-		delay(1);
-	}
-	// Make sure we are stopped
 	setSpeed(0);
+
+	// Turn LEDs OFF
 	//	ledsOn(CRGB::Black);
+}
+
+void NXG_Rover::delayFor(float s=0, bool isDanceMode=false) {
+	//if (_serial) _serial->println(_ms_per_beat);
+	isDanceMode ? delay(s*_ms_per_beat) : delay(s * 1000);
 }
 
 /* LED Bar Methods */
@@ -417,6 +509,10 @@ void NXG_Rover::turnOffBatteryCheck(bool turnOff) {
 	if (turnOff) {
 		_turnOffBatteryCheck = true;
 	}
+}
+
+void NXG_Rover::setLEDIndicator(int level) {
+	_bar.setLevel(level);
 }
 
 /* LED Methods */
@@ -440,6 +536,35 @@ void NXG_Rover::ledsWarning() {
 	_leds[1] = CRGB::Red;
 	FastLED.show();
 	_leds_state_on = true;
+}
+
+void NXG_Rover::metronome(int numBeats) {
+	for (int i = 0; i < numBeats; i++) {
+		if (i % 4 == 0) {
+			flashLED_3(1000);
+		}
+		else {
+			flashLED_2(500);
+		}
+	}
+}
+
+void NXG_Rover::flashLED_2(int toneFreq, float scalingFactor) {
+	tone(BUZZER_PIN, toneFreq);
+	digitalWrite(A1, HIGH);
+	delayFor(0.2 * BPM_SCALING_FACTOR * scalingFactor, true);
+	noTone(BUZZER_PIN);
+	digitalWrite(A1, LOW);
+	delayFor(0.8 * BPM_SCALING_FACTOR * scalingFactor, true);
+}
+
+void NXG_Rover::flashLED_3(int toneFreq, float scalingFactor) {
+	tone(BUZZER_PIN, toneFreq);
+	digitalWrite(A2, HIGH);
+	delayFor(0.2 * BPM_SCALING_FACTOR * scalingFactor, true);
+	noTone(BUZZER_PIN);
+	digitalWrite(A2, LOW);
+	delayFor(0.8 * BPM_SCALING_FACTOR * scalingFactor, true);
 }
 
 /* Buzzer Methods */
@@ -520,7 +645,7 @@ void NXG_Rover::playMelody(int melody[], int num_notes) {
 		// the note's duration + 30% seems to work well:
 		int pauseBetweenNotes = noteDuration * 1.30;
 		delay(pauseBetweenNotes);
-		//noTone(BUZZER_PIN);
+		noTone(BUZZER_PIN);
 	}
 }
 
@@ -614,7 +739,7 @@ void NXG_Rover::calibrate() {
 	}
 
 	// Play a tone at 1000 Hz (1 kHz) for 1000 milliseconds (1 second)
-	//playTone(1000);
+	playTone(1000);
 }
 
 // Private Methods
