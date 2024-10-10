@@ -13,7 +13,7 @@
 // Initialize the static member
 NXG_Rover* NXG_Rover::rover = nullptr;
 
-Servo servo
+Servo servo;
 Ultrasonic ultrasonic(ULTRASONIC_PIN);
 
 // Initialize static constants
