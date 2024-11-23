@@ -3,6 +3,12 @@
  Created:	9/24/2023 3:35:45 PM
  Author:	Peter Januarius
  Editor:	http://www.visualmicro.com
+
+ Version:	1.5.9
+	- Development: 14/11-??????
+	- Changes
+		- Optimised setSpeedBoth function
+		- Test drive code removed ++ operator
 */
 
 #include "Nexgen_Rover.h"
@@ -17,7 +23,7 @@ Servo servo;
 Ultrasonic ultrasonic(ULTRASONIC_PIN);
 
 // Initialize static constants
-const float NXG_Rover::VREF_ARDUINO_NANO_V3 = 5.1;//4.68 when USB is plugged in;
+const float NXG_Rover::VREF_ARDUINO_NANO_V3 = 4.2;//4.68 when USB is plugged in;
 const float NXG_Rover::VREF_ARDUINO_NANO_33 = 3.3;
 
 ISR(TIMER1_COMPB_vect) {
@@ -92,6 +98,10 @@ void NXG_Rover::setBatteryType(int type) {
 
 void NXG_Rover::setVoltageReference(float vRef) {
 	_voltageReference = vRef;
+}
+
+void NXG_Rover::setUseBatteryIndicator(bool bUsed) {
+	_batteryIndicatorIsBeingUsed = bUsed;
 }
 
 SoftwareSerial& NXG_Rover::getBluetooth() {
@@ -351,8 +361,9 @@ void NXG_Rover::setSpeedRight(int mapped_speedR) {
 	currentSpeedRight = mapped_speedR;
 }
 
+/*
 void NXG_Rover::setSpeedBoth(int sp_left, int sp_right) {
-	_serial->print("setting setSpeedBoth....");
+	//_serial->print("setting setSpeedBoth....");
 	for (int i = 0; i < max(sp_left,sp_right); i+=2) {
 		analogWrite(MOTOR_LEFT_PIN, min(i,sp_left));
 		analogWrite(MOTOR_RIGHT_PIN, min(i,sp_right));
@@ -362,6 +373,36 @@ void NXG_Rover::setSpeedBoth(int sp_left, int sp_right) {
 	currentSpeedRight = sp_right;
 	currentSpeedLeft = sp_left;
 }
+*/
+
+void NXG_Rover::setSpeedBoth(int sp_left, int sp_right) {
+	//_serial->println("Setting speed for both motors...");
+
+	int leftSpeed = 0;
+	int rightSpeed = 0;
+
+	while (leftSpeed < sp_left || rightSpeed < sp_right) {
+		// Gradually increase speeds, but not above target values
+		if (leftSpeed < sp_left) leftSpeed += 2;
+		if (rightSpeed < sp_right) rightSpeed += 2;
+
+		// Clamp speeds to their target values to avoid overshoot
+		leftSpeed = min(leftSpeed, sp_left);
+		rightSpeed = min(rightSpeed, sp_right);
+
+		// Apply speeds to the motors
+		analogWrite(MOTOR_LEFT_PIN, leftSpeed);
+		analogWrite(MOTOR_RIGHT_PIN, rightSpeed);
+
+		// Small delay for gradual ramp-up
+		delay(10);
+	}
+
+	// Update the current speed variables
+	currentSpeedLeft = sp_left;
+	currentSpeedRight = sp_right;
+}
+
 
 void NXG_Rover::setDirection(int dLeft, int dRight) {
 	digitalWrite(DIR_LEFT_PIN, dLeft);
@@ -497,11 +538,11 @@ void NXG_Rover::delayFor(float s=0, bool isDanceMode=false) {
 void NXG_Rover::setBatteryIndicator(float voltage) {
 	//if (_serial) _serial->print("setBatteryIndicator... ");_serial->println(voltage);
 	float max_battery_value = getMaxVoltage();
-	float min_battery_value = getMinVoltage();
-	float indicator_level = voltage - min_battery_value;
-	int ledLevelAsPercentage = (indicator_level / (max_battery_value - min_battery_value)) * 100;
+	//float min_battery_value = getMinVoltage();
+	float indicator_level = (voltage/max_battery_value) * 10;
+	//int ledLevelAsPercentage = (indicator_level / (max_battery_value - min_battery_value)) * 100;
 	if (rover){
-		rover->_bar.setLevel(floor(ledLevelAsPercentage / 10));
+		rover->setLEDIndicator((int)indicator_level);		
 	}
 }
 
@@ -807,10 +848,12 @@ void NXG_Rover::setupBatteryCheckTimer() {
 }
 
 static float NXG_Rover::getBatteryVoltage(int batteryType) {
+	analogReference(DEFAULT);
+
 	//if (_serial) {_serial->println("getBatteryVoltage()...");}
 	float analog_proportional_resolution_reading = analogRead(BATTERY_PIN);
-	Serial.println(analog_proportional_resolution_reading);
-	Serial.println("********************");
+	//Serial.println(analog_proportional_resolution_reading);
+	//Serial.println("********************");
 
 	/* We divide the reference voltage into 1024 equal parts and then multiply
 	it by the number taken from analog_proportional_voltage_reading, giving
@@ -819,7 +862,8 @@ static float NXG_Rover::getBatteryVoltage(int batteryType) {
 
 	/* We then get the total voltage of the battery by the following equation. This is a
 	rearrangement of Vin x Rdown/Rup+RDown - the proportion across Rdown */
-	float totalBatteryVoltage = proportionalVoltage * ((RESISTOR_UP / RESISTOR_DOWN) + 1);
+	//float totalBatteryVoltage = proportionalVoltage * ((RESISTOR_UP / RESISTOR_DOWN) + 1);
+	float totalBatteryVoltage = proportionalVoltage * ((RESISTOR_UP + RESISTOR_DOWN) / RESISTOR_DOWN);
 
 	/*	Using a 2S LiPo we need a calibration factor because the values we are getting are different to the actual measured values
 		VREF = 5.1v
@@ -839,7 +883,7 @@ void NXG_Rover::handleBatteryMonitoring() {
 void NXG_Rover::timerCallback() {
 	// This method is called by the timer interrupt
 	// Here, perform the battery check and update any indicators or alarms
-	if (rover) {
+	if (rover && rover->_batteryIndicatorIsBeingUsed) {
 		float battery_voltage = rover->getBatteryVoltage(rover->_batteryType);  // Assume getBatteryVoltage() is a method that fetches the current battery voltage
 
 		if (battery_voltage < rover->getMinVoltage()) {
@@ -848,6 +892,9 @@ void NXG_Rover::timerCallback() {
 			rover->_isRoverEnabled = false;
 		}
 
+		// Corrected Serial.print for debugging
+		Serial.print("Battery Voltage = ");
+		Serial.println(battery_voltage);
 		rover->setBatteryIndicator(battery_voltage);         // Assume setBatteryIndicator(float) updates the battery level display
 	}
 }

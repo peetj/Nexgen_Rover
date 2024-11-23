@@ -55,6 +55,7 @@ public:
     /* Setup methods */
     void setBatteryType(int type);
     void setVoltageReference(float vRef);
+    void setUseBatteryIndicator(bool bUsed = false);
     static float getBatteryVoltage(int batteryType);
 
     /* Bluetooth Methods */
@@ -198,14 +199,14 @@ private:
     #define BRAKING_RATE 10
     #define MAX_INPUT 10
     #define BATTERY_PIN A0
-    #define LEDBAR_CLOCK_PIN A4
-    #define LEDBAR_DATA_PIN A5
+    #define LEDBAR_CLOCK_PIN A5
+    #define LEDBAR_DATA_PIN A4
     #define INFRARED_PIN 8
     #define RESISTOR_UP 10000
     #define RESISTOR_DOWN 3300
     #define LIPO_2S_MIN_VOLTAGE 6.4
     #define LIPO_3S_MIN_VOLTAGE 10.5
-    #define ALKALINE_9V_MIN_VOLTAGE 7.0
+    #define ALKALINE_9V_MIN_VOLTAGE 6.0
     #define LIPO_2S_MAX_VOLTAGE 8.4
     #define LIPO_3S_MAX_VOLTAGE 12.6
     #define ALKALINE_9V_MAX_VOLTAGE 9.0
@@ -234,6 +235,7 @@ private:
     bool _leds_state_on = false;
     bool _servoInUse = false;
     bool _turnOffBatteryCheck = false;
+    bool _batteryIndicatorIsBeingUsed = false;
     int _bpm = 0;
     int _ms_per_beat = 0;
 };
